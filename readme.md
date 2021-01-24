@@ -52,3 +52,5 @@ extern "C" int main(void)
 
 You should be able to instantiate several of these in the same sketch and define service methods
 to call each instances service functions, then attach them to interrupts in your main().
+
+Explanations of the constructor arguments are in the header file.
