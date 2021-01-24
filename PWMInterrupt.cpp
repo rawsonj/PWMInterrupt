@@ -1,4 +1,4 @@
-/* PWMInterrupt - read internal temperature of ARM processor
+/* PWMInterrupt
  * Copyright (C) 2021 Joe Rawson
  *
  * MIT License
@@ -30,9 +30,9 @@
 PWMInterrupt::PWMInterrupt(int pin_num_arg,
                            int pw1,
                            int pw2,
-                           voidFuncPtr function=NULL,
-                           voidFuncPtr function1=NULL,
-                           voidFuncPtr function2=NULL,
+                           voidFuncPtr function,
+                           voidFuncPtr function1,
+                           voidFuncPtr function2,
                            bool invert_logic=false) {
     callback1 = function;
     callback2 = function1;
@@ -41,12 +41,13 @@ PWMInterrupt::PWMInterrupt(int pin_num_arg,
     duration2 = pw2;
     pin_num = pin_num_arg;
     invert = invert_logic;
+    pinMode(pin_num, INPUT);
 }
 
 PWMInterrupt::PWMInterrupt(int pin_num_arg,
                            int pw,
-                           voidFuncPtr function=NULL,
-                           voidFuncPtr function1=NULL,
+                           voidFuncPtr function,
+                           voidFuncPtr function1,
                            bool invert_logic=false) {
     callback1 = function; // should be set to something, but we should also never hit this one.
     duration1 = pw;
@@ -57,16 +58,11 @@ PWMInterrupt::PWMInterrupt(int pin_num_arg,
     invert = invert_logic;
 }
 
-void PWMInterrupt::begin() {
-    pinMode(pin_num, INPUT);
-    attachInterrupt(pin_num, (voidFuncPtr)(&PWMInterrupt::service), CHANGE);
-}
-
 // The service callback. Senses the pin level and calls the appropriate callback
 // depending on the delay from the pulse width.
 void PWMInterrupt::service() {
-    uint8_t line_val = digitalReadFast(pin_num);
     unsigned long time = micros();
+    uint8_t line_val = digitalReadFast(pin_num);
     unsigned long delta = 0;
     uint8_t check_val = (invert ? LOW: HIGH);
     // If the line is the start of the pulse, record the start time and exit.
@@ -78,17 +74,11 @@ void PWMInterrupt::service() {
         delta = time - start; // This will also be erroneous if we rolled over.
                               // Should think about the math harder here.
         if (duration2 <= delta) {
-            if (!callback3) {
-                callback3();
-            }
+            callback3();
         } else if (duration1 <= delta) {
-            if (!callback2) {
-                callback2();
-            }
+            callback2();
         } else {
-            if (!callback1) {
-                callback1();
-            }
+            callback1();
         }
 
     }

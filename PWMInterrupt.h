@@ -1,4 +1,4 @@
-/* PWMInterrupt - read internal temperature of ARM processor
+/* PWMInterrupt
  * Copyright (C) 2021 Joe Rawson
  *
  * MIT License
@@ -34,15 +34,11 @@
  *      that threshold.
  *   2. A 3-mode switch with "off", "on1" and "on2."
  *
- * The actual implementation is to check if the pointer is void first,
- * then execute the callback if it is not void for all of the positions.
- *
  * The pulses look like:
  *                         _________________
  * _______________________/                 \_______________________
  *                        <---pulse width--->
  *
- * Since this is interrupt driven, the period doesn't matter.
  */
 
 #ifndef PWMInterrupt_h_
@@ -52,30 +48,33 @@ typedef void (*voidFuncPtr)(void);
 
 class PWMInterrupt {
     public:
-        PWMInterrupt(int pin_num_arg,
-                     int pw,
-                     voidFuncPtr function,
-                     voidFuncPtr function1,
-                     bool invert_logic);
+        // This constructor implements a 2-position switch-like interface.
+        PWMInterrupt(int pin_num_arg, // The pin we have configured as an interrupt.
+                     int pw, // The width of the pulse, in microseconds.
+                     voidFuncPtr function, // The function to execute when the pulse is below pw.
+                     voidFuncPtr function1, // The function to execute when the pulse is above pw.
+                     bool invert_logic); // Inverts the leading-edge logic. IE: rising or falling starts the pulse.
 
-        PWMInterrupt(int pin_num_arg,
-                     int pw1,
-                     int pw2,
-                     voidFuncPtr function,
-                     voidFuncPtr function1,
-                     voidFuncPtr function2,
-                     bool invert_logic);
-        void begin();
+        // This constructor implements a 3-position switch-like interface.
+        PWMInterrupt(int pin_num_arg, // The pin we have configured as an interrupt.
+                     int pw1, // The width of the pulse to indicate position 2.
+                     int pw2, // The width of the pulse to indicate position 3.
+                     voidFuncPtr function, // Function to execute when pulse is below pw1.
+                     voidFuncPtr function1, // Function to execute when pulse is between pw1<->pw2.
+                     voidFuncPtr function2, // Function to execute when pulse is above pw2.
+                     bool invert_logic); // Inverts the leading edge logic.
+
+        void service(); // service callback that implements the main logic.
+                        // This actually has to be called by a 
 
     private:
         voidFuncPtr callback1; // Callback for when the delta is below both durations.
         voidFuncPtr callback2; // Callback for when duration1 is reached.
         voidFuncPtr callback3; // Callback for when duration2 is reached.
         unsigned long duration1; // 1st pulse duration, in microseconds.
-        unsigned long duration2; // 2nd pulse duration, in case you're using a 3 position switch on the pwm.
+        unsigned long duration2; // 2nd pulse duration, in case you're using a 3 position switch.
         int pin_num; // Stores the pin number this interrupt is attached to.
-        void service(); // service callback that implements the main logic.
-        unsigned long start; // Used to save the edge time.
+        unsigned long start; // Used to save the leading edge time.
         bool invert; // Uses the falling-edge as the start instead of the rising edge.
 };
 
