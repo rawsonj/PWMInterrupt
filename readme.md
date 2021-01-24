@@ -40,14 +40,12 @@ void service(void) {
 
 extern "C" int main(void)
 {
-    Serial.begin(115200);
     pinMode(OUTPUTPIN, OUTPUT);
     pinMode(PWMINPUT, INPUT);
     attachInterrupt(digitalPinToInterrupt(PWMINPUT), service, CHANGE); // Attach interrupt
     while (1) {
         // Do other, more important things here.
         delay(500);
-        ;
     }
 }
 ```
