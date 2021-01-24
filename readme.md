@@ -14,40 +14,43 @@ Frequency of the signal is not required.
 Everything is implemented in a call-back fashion and driven by interrupts
 to make it as efficient as possible.
 
-Below is an example of how to use it in a sketch:
-    
-    #include "WProgram.h"
-    #include <PWMInterrupt.h>
+Below is an example of how to use it in a sketch
 
-    #define OUTPUTPIN 13
-    #define PWMINPUT 2
+```cpp
 
-    void turn_off_output(void) {
-        digitalWriteFast(OUTPUTPIN, LOW);
+#include "WProgram.h"
+#include <PWMInterrupt.h>
+
+#define OUTPUTPIN 13
+#define PWMINPUT 2
+
+void turn_off_output(void) {
+    digitalWriteFast(OUTPUTPIN, LOW);
+}
+
+void turn_on_output(void) {
+    digitalWriteFast(OUTPUTPIN, HIGH);
+}
+
+PWMInterrupt pwm_input(PWMINPUT, 1400, turn_off_output, turn_on_output, false);
+
+void service(void) {
+    pwm_input.service();
+}
+
+extern "C" int main(void)
+{
+    Serial.begin(115200);
+    pinMode(OUTPUTPIN, OUTPUT);
+    pinMode(PWMINPUT, INPUT);
+    attachInterrupt(digitalPinToInterrupt(PWMINPUT), service, CHANGE); // Attach interrupt
+    while (1) {
+        // Do other, more important things here.
+        delay(500);
+        ;
     }
-
-    void turn_on_output(void) {
-        digitalWriteFast(OUTPUTPIN, HIGH);
-    }
-
-    PWMInterrupt pwm_input(PWMINPUT, 1400, turn_off_output, turn_on_output, false);
-
-    void service(void) {
-        pwm_input.service();
-    }
-
-    extern "C" int main(void)
-    {
-        Serial.begin(115200);
-        pinMode(OUTPUTPIN, OUTPUT);
-        pinMode(PWMINPUT, INPUT);
-        attachInterrupt(digitalPinToInterrupt(PWMINPUT), service, CHANGE); // Attach interrupt
-        while (1) {
-            // Do other, more important things here.
-            delay(500);
-            ;
-        }
-    }
+}
+```
 
 You should be able to instantiate several of these in the same sketch and define service methods
 to call each instances service functions, then attach them to interrupts in your main().
